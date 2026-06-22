@@ -13,7 +13,7 @@ A real-time polling web application deployed on AWS using CloudFront, ALB, EC2, 
 - [x] Create and configure AWS Free Tier account; set up IAM users with least-privilege permissions
 - [x] Install and configure AWS CLI locally with named profiles
 - [x] Create a GitHub repository with proper branching strategy (`main`, `develop`, feature branches)
-- [x] Launch an EC2 instance (`t2.micro`) and configure security groups to allow HTTP/HTTPS traffic
+- [x] Launch an EC2 instance (`t3.micro`) and configure security groups to allow HTTP/HTTPS traffic
 - [x] Create an S3 bucket for static assets with appropriate public access settings
 - [x] Document the project environment setup in a `README.md` file in GitHub
 - [x] Develop a simple web application (HTML/CSS/JS or lightweight framework) and host it on EC2
@@ -102,7 +102,7 @@ pulsevote/
 
 | Service | Purpose |
 |---|---|
-| EC2 (t2.micro) | Hosts Nginx web server serving index.html |
+| EC2 (t3.micro) | Hosts Nginx web server serving index.html |
 | Application Load Balancer | Distributes traffic, HTTP→HTTPS redirect |
 | CloudFront | Global CDN, SSL termination, caches static content |
 | ACM (Certificate Manager) | Free SSL/TLS certificate for HTTPS |
@@ -137,7 +137,7 @@ Branch strategy:
 - `feature/*` — individual features
 
 ### 3. EC2 Instance
-- Launch **t2.micro** (Amazon Linux 2 or Ubuntu 22.04)
+- Launch **t3.micro** (Amazon Linux 2 or Ubuntu 22.04)
 - Security group: allow **HTTP (80)** and **HTTPS (443)** inbound
 - Download and save your `.pem` key file securely
 
