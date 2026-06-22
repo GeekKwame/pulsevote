@@ -1,5 +1,5 @@
 # PulseVote — Live Polling App
-> AWS Capstone Project · End-to-End Cloud Solution Design & Deployment
+End-to-End Cloud Solution Design & Deployment
 
 A real-time polling web application deployed on AWS using CloudFront, ALB, EC2, S3, ACM, and GitHub Actions CI/CD.
 
@@ -9,12 +9,39 @@ A real-time polling web application deployed on AWS using CloudFront, ALB, EC2, 
 
 ## 🚀 Project Status Update
 
-The following foundational tasks have been completed:
-- [x] Initial codebase repository structure setup.
-- [x] Web client interface (`index.html`) created with real-time poll simulation.
-- [x] CI/CD deployment pipeline defined via GitHub Actions (`.github/workflows/deploy.yml`).
-- [x] Repository security baseline configured (`.gitignore` rules to prevent credential leakage).
-- [x] Code successfully pushed to GitHub.
+### Done So Far
+- [x] Create and configure AWS Free Tier account; set up IAM users with least-privilege permissions
+- [x] Install and configure AWS CLI locally with named profiles
+- [x] Create a GitHub repository with proper branching strategy (`main`, `develop`, feature branches)
+- [x] Launch an EC2 instance (`t2.micro`) and configure security groups to allow HTTP/HTTPS traffic
+- [x] Create an S3 bucket for static assets with appropriate public access settings
+- [x] Document the project environment setup in a `README.md` file in GitHub
+- [x] Develop a simple web application (HTML/CSS/JS or lightweight framework) and host it on EC2
+- [x] Configure a Target Group pointing to your EC2 instance(s)
+- [x] Create an Application Load Balancer (ALB) to distribute traffic to the Target Group
+- [x] Configure ALB Listener Rules for HTTP → HTTPS redirect
+- [x] Set up Auto Scaling Group to handle traffic spikes
+- [x] Upload static assets (images, CSS, JS) to S3 and serve via public URL
+- [x] Test ALB health checks and confirm instances are in 'healthy' state
+- [x] Push all code to GitHub
+
+### Yet to Do
+- [ ] Create a CloudFront distribution with ALB as the origin
+- [ ] Attach the ACM certificate to CloudFront to enforce HTTPS on the custom domain
+- [ ] Configure CloudFront Behaviors: redirect HTTP to HTTPS, set cache policies for static assets
+- [ ] Restrict EC2 security groups to only accept traffic from CloudFront (using AWS-managed prefix lists)
+- [ ] Apply IAM policies using principle of least privilege for all AWS resources
+- [ ] Enable S3 bucket policies to only allow CloudFront Origin Access Control (OAC)
+- [ ] Review and document all open ports and security group rules
+- [ ] Test the full HTTPS flow: browser → CloudFront → ALB → EC2
+- [ ] Create GitHub Actions workflow to automatically deploy code changes to EC2 on push to `main` branch
+- [ ] Set up a deployment script that SSHs into EC2 and pulls latest code from GitHub
+- [ ] Configure CloudWatch Alarms for: EC2 CPU utilization > 80%, ALB 5xx error rate > 5%
+- [ ] Enable CloudWatch Logs for the web application and set log retention to 7 days
+- [ ] Set up AWS Budgets alert to notify when costs approach Free Tier limits
+- [ ] Update Trello board to reflect completed tasks and close out backlog items
+- [ ] Write a final deployment checklist and update the project README with architecture diagram
+- [ ] Conduct a peer code review via GitHub Pull Requests before final merge
 
 ---
 
@@ -286,19 +313,7 @@ aws logs put-retention-policy \
 
 ## Deployment Checklist
 
-- [ ] EC2 instance running, Nginx serving `index.html`
-- [ ] Target group shows EC2 as **healthy**
-- [ ] ALB listener redirecting HTTP → HTTPS
-- [ ] ACM certificate status: **Issued**
-- [ ] CloudFront distribution **Deployed**
-- [ ] HTTPS works via CloudFront URL
-- [ ] EC2 security group restricted to CloudFront prefix list
-- [ ] S3 bucket blocks public access, OAC configured
-- [ ] GitHub Actions pipeline runs successfully on push
-- [ ] CloudWatch alarms active (CPU, errors)
-- [ ] AWS Budget alert configured
-- [ ] README updated with live URL and architecture diagram
-- [ ] Trello board completed
+Refer to the **[Project Status Update](#-project-status-update)** section at the top of this document for the complete status of completed and remaining task items.
 
 ---
 
