@@ -3,7 +3,7 @@ End-to-End Cloud Solution Design & Deployment
 
 A real-time polling web application deployed on AWS using CloudFront, ALB, EC2, S3, ACM, and GitHub Actions CI/CD.
 
-**Live URL:** `https://your-cloudfront-domain.cloudfront.net`
+**Live URL:** https://d3qju0bc4vfs1j.cloudfront.net/
 
 ---
 

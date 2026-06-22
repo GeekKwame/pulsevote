@@ -698,7 +698,7 @@
         <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">Poll is live!</h3>
         <p style="color:var(--ink-soft);font-size:14px;margin-bottom:4px;">Share this link with your audience</p>
         <div class="share-box">
-          <span class="share-url" id="share-url-text">https://d1abc.cloudfront.net/vote?id=xyz</span>
+          <span class="share-url" id="share-url-text">https://d3qju0bc4vfs1j.cloudfront.net/vote?id=xyz</span>
           <button class="copy-btn" onclick="copyShareUrl()">Copy</button>
         </div>
         <div style="display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
@@ -876,7 +876,7 @@ function createPoll() {
   polls.unshift(newPoll);
   activePollId = newPoll.id;
 
-  document.getElementById('share-url-text').textContent = `https://d1abc123.cloudfront.net/vote?id=${newPoll.id}`;
+  document.getElementById('share-url-text').textContent = `https://d3qju0bc4vfs1j.cloudfront.net/vote?id=${newPoll.id}`;
   document.getElementById('create-form-view').style.display = 'none';
   document.getElementById('create-success-view').style.display = 'block';
 
