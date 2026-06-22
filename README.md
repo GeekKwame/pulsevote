@@ -7,6 +7,18 @@ A real-time polling web application deployed on AWS using CloudFront, ALB, EC2, 
 
 ---
 
+## 🚀 Project Status Update
+
+The following foundational tasks have been completed:
+- [x] Initial codebase repository structure setup.
+- [x] Web client interface (`index.html`) created with real-time poll simulation.
+- [x] CI/CD deployment pipeline defined via GitHub Actions (`.github/workflows/deploy.yml`).
+- [x] Repository security baseline configured (`.gitignore` rules to prevent credential leakage).
+- [x] Code successfully pushed to GitHub.
+
+---
+
+
 ## Architecture Overview
 
 ```
@@ -88,7 +100,7 @@ aws configure
 
 ### 2. GitHub Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/pulsevote.git
+git clone https://github.com/GeekKwame/pulsevote.git
 cd pulsevote
 ```
 
@@ -324,7 +336,7 @@ Each AWS resource (EC2 role, GitHub Actions user) has only the permissions it ne
 
 | Name | Role |
 |---|---|
-| Your Name | Cloud Engineer |
+| GeekKwame | Cloud Engineer |
 
 ---
 
