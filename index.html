@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PulseVote — Live Polling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0B0E17;
+    --ink-soft: #4A5068;
+    --ink-faint: #8A90A8;
+    --surface: #F6F7FB;
+    --white: #FFFFFF;
+    --accent: #4F46E5;
+    --accent-light: #EEF2FF;
+    --accent-mid: #818CF8;
+    --green: #10B981;
+    --green-light: #ECFDF5;
+    --amber: #F59E0B;
+    --amber-light: #FFFBEB;
+    --red: #EF4444;
+    --border: #E2E5F0;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font: 'Space Grotesk', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--surface);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+  }
+  .nav-links a {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-links a:hover, .nav-links a.active {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .nav-cta {
+    background: var(--accent);
+    color: var(--white) !important;
+    padding: 8px 18px !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 600 !important;
+  }
+  .nav-cta:hover { background: #4338CA !important; color: var(--white) !important; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── HERO (HOME) ── */
+  .hero {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 80px 2rem 60px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 99px;
+    margin-bottom: 28px;
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+  }
+  .hero-badge .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+  .hero h1 span {
+    color: var(--accent);
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 540px;
+    margin: 0 auto 36px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--white);
+  }
+  .btn-primary:hover { background: #4338CA; transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--surface); }
+
+  /* ── STATUS BADGES ── */
+  .status-strip {
+    max-width: 900px;
+    margin: 0 auto 70px;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .status-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .status-icon {
+    width: 40px; height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .status-label { font-size: 13px; color: var(--ink-faint); font-family: var(--mono); }
+  .status-val { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .s-green { background: var(--green-light); color: var(--green); }
+  .s-blue { background: var(--accent-light); color: var(--accent); }
+  .s-amber { background: var(--amber-light); color: var(--amber); }
+
+  /* ── HOW IT WORKS ── */
+  .section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem 80px;
+  }
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 40px;
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .step {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .step p { font-size: 14px; color: var(--ink-soft); }
+
+  /* ── CREATE POLL PAGE ── */
+  .form-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 50px 2rem 80px;
+  }
+  .page-title { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .page-sub { font-size: 15px; color: var(--ink-soft); margin-bottom: 36px; }
+
+  .form-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+  .field { margin-bottom: 24px; }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: var(--font);
+    color: var(--ink);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+  }
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+  .option-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .option-letter {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+    font-family: var(--mono);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .add-option {
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-family: var(--font);
+    width: 100%;
+    text-align: left;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+  .add-option:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .form-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+  /* ── VOTE PAGE ── */
+  .vote-page {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 50px 2rem 80px;
+  }
+  .poll-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .poll-header {
+    background: var(--ink);
+    padding: 28px 30px;
+    color: var(--white);
+  }
+  .poll-header .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--accent-mid);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .poll-question { font-size: 1.4rem; font-weight: 700; line-height: 1.3; }
+  .poll-meta { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 10px; }
+  .poll-options { padding: 24px 30px; display: flex; flex-direction: column; gap: 12px; }
+  .vote-option {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.15s;
+    font-size: 15px;
+    font-weight: 500;
+    background: var(--white);
+  }
+  .vote-option:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+  .vote-option.selected { border-color: var(--accent); background: var(--accent); color: var(--white); }
+  .vote-option .opt-letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; font-family: var(--mono);
+    flex-shrink: 0;
+  }
+  .vote-option.selected .opt-letter { background: rgba(255,255,255,0.2); }
+  .poll-actions { padding: 0 30px 28px; }
+  .btn-full { width: 100%; justify-content: center; display: flex; }
+
+  /* ── RESULTS PAGE ── */
+  .results-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 50px 2rem 80px;
+  }
+  .results-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .results-header {
+    background: var(--ink);
+    padding: 24px 28px;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .results-header h2 { font-size: 1.2rem; font-weight: 700; }
+  .live-badge {
+    background: var(--green);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-family: var(--mono);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .live-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: white; animation: pulse 1.2s infinite; }
+  .results-body { padding: 28px; }
+  .result-item { margin-bottom: 20px; }
+  .result-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; font-weight: 600; margin-bottom: 8px;
+  }
+  .result-pct { font-family: var(--mono); font-size: 14px; color: var(--accent); }
+  .result-bar-bg {
+    height: 10px;
+    background: var(--surface);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .result-bar {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--accent);
+    transition: width 0.8s cubic-bezier(0.22,1,0.36,1);
+  }
+  .result-bar.winner { background: var(--green); }
+  .result-votes { font-size: 12px; color: var(--ink-faint); margin-top: 5px; font-family: var(--mono); }
+  .results-footer {
+    border-top: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .total-votes { font-family: var(--mono); font-weight: 700; font-size: 15px; color: var(--ink); }
+
+  /* ── DASHBOARD PAGE ── */
+  .dash-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 50px 2rem 80px;
+  }
+  .dash-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .stat-tile {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .stat-tile .lbl { font-size: 12px; color: var(--ink-faint); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-tile .val { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; }
+  .polls-grid { display: flex; flex-direction: column; gap: 12px; }
+  .poll-row {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .poll-row-left { flex: 1; min-width: 200px; }
+  .poll-row-q { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .poll-row-meta { font-size: 13px; color: var(--ink-faint); font-family: var(--mono); }
+  .poll-row-actions { display: flex; gap: 8px; }
+  .btn-sm {
+    padding: 7px 14px;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--white);
+    font-family: var(--font);
+    font-weight: 500;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { background: var(--surface); }
+  .btn-sm.accent { background: var(--accent); color: var(--white); border-color: var(--accent); }
+  .btn-sm.accent:hover { background: #4338CA; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-family: var(--mono);
+  }
+  .badge-live { background: var(--green-light); color: var(--green); }
+  .badge-closed { background: var(--surface); color: var(--ink-faint); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--ink);
+    color: var(--white);
+    padding: 14px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+    max-width: 300px;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── SHARE BOX ── */
+  .share-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .share-url {
+    flex: 1;
+    font-size: 13px;
+    font-family: var(--mono);
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .copy-btn {
+    background: var(--white);
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font);
+    font-weight: 600;
+    color: var(--accent);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .copy-btn:hover { background: var(--accent-light); }
+
+  /* ── SUCCESS STATE ── */
+  .success-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .success-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--green-light);
+    color: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 20px;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 1rem; }
+    .nav-links { display: none; }
+    .hero { padding: 50px 1rem 40px; }
+    .status-strip { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" onclick="goTo('home')">
+    <span class="logo-dot"></span> PulseVote
+  </div>
+  <ul class="nav-links">
+    <li><a onclick="goTo('home')" id="nav-home" class="active">Home</a></li>
+    <li><a onclick="goTo('create')" id="nav-create">Create</a></li>
+    <li><a onclick="goTo('vote')" id="nav-vote">Vote</a></li>
+    <li><a onclick="goTo('results')" id="nav-results">Results</a></li>
+    <li><a onclick="goTo('dashboard')" id="nav-dashboard">Dashboard</a></li>
+    <li><a onclick="goTo('create')" class="nav-cta">New poll</a></li>
+  </ul>
+</nav>
+
+<!-- ─────────────── HOME ─────────────── -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-badge">
+      <span class="live-dot"></span>
+      Deployed on AWS · CloudFront + ALB + EC2
+    </div>
+    <h1>Polls that move<br>at the <span>speed of live</span></h1>
+    <p>Create a poll, share the link, and watch results update in real time — no refresh, no waiting.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="goTo('create')">Create a poll</button>
+      <button class="btn btn-secondary" onclick="goTo('vote')">Try a demo poll</button>
+    </div>
+  </div>
+
+  <div class="status-strip">
+    <div class="status-card">
+      <div class="status-icon s-green">🔒</div>
+      <div>
+        <div class="status-label">Security</div>
+        <div class="status-val">HTTPS via ACM</div>
+      </div>
+    </div>
+    <div class="status-card">
+      <div class="status-icon s-blue">⚡</div>
+      <div>
+        <div class="status-label">Distribution</div>
+        <div class="status-val">CloudFront CDN</div>
+      </div>
+    </div>
+    <div class="status-card">
+      <div class="status-icon s-green">⚖️</div>
+      <div>
+        <div class="status-label">Routing</div>
+        <div class="status-val">ALB + Health checks</div>
+      </div>
+    </div>
+    <div class="status-card">
+      <div class="status-icon s-amber">🚀</div>
+      <div>
+        <div class="status-label">CI/CD</div>
+        <div class="status-val">GitHub Actions</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-eyebrow">How it works</div>
+    <h2>Three steps to live results</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01 —</div>
+        <h3>Write your question</h3>
+        <p>Give your poll a clear question and up to four answer choices. Takes under a minute.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02 —</div>
+        <h3>Share the link</h3>
+        <p>Copy your unique poll URL and send it to your audience — in chat, on screen, anywhere.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03 —</div>
+        <h3>Watch votes roll in</h3>
+        <p>Results update live as votes come in. No refresh needed — just watch the bars move.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── CREATE ─────────────── -->
+<div id="page-create" class="page">
+  <div class="form-page">
+    <p class="page-title">Create a poll</p>
+    <p class="page-sub">Fill in your question and options. Your poll goes live instantly.</p>
+    <div class="form-card" id="create-form-view">
+      <div class="field">
+        <label for="poll-q">Your question</label>
+        <input type="text" id="poll-q" placeholder="e.g. Which cloud provider is best?" maxlength="140" />
+      </div>
+      <div class="field">
+        <label>Answer options</label>
+        <div class="options-list" id="options-list">
+          <div class="option-row"><span class="option-letter">A</span><input type="text" placeholder="Option A" /></div>
+          <div class="option-row"><span class="option-letter">B</span><input type="text" placeholder="Option B" /></div>
+        </div>
+        <button class="add-option" onclick="addOption()">+ Add another option</button>
+      </div>
+      <div class="form-footer">
+        <button class="btn btn-primary" onclick="createPoll()">Launch poll →</button>
+      </div>
+    </div>
+    <div class="form-card" id="create-success-view" style="display:none;">
+      <div class="success-state">
+        <div class="success-icon">✓</div>
+        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">Poll is live!</h3>
+        <p style="color:var(--ink-soft);font-size:14px;margin-bottom:4px;">Share this link with your audience</p>
+        <div class="share-box">
+          <span class="share-url" id="share-url-text">https://d1abc.cloudfront.net/vote?id=xyz</span>
+          <button class="copy-btn" onclick="copyShareUrl()">Copy</button>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="goTo('vote')">Preview vote page</button>
+          <button class="btn btn-secondary" onclick="goTo('results')">See results</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── VOTE ─────────────── -->
+<div id="page-vote" class="page">
+  <div class="vote-page">
+    <div class="poll-card">
+      <div class="poll-header">
+        <div class="eyebrow">Active poll · closes in 23 min</div>
+        <div class="poll-question" id="vote-question">Which cloud provider has the best free tier for students?</div>
+        <div class="poll-meta" id="vote-meta">42 votes so far · anyone can vote</div>
+      </div>
+      <div class="poll-options" id="vote-options">
+        <div class="vote-option" onclick="selectOption(this, 0)">
+          <span class="opt-letter">A</span> AWS — Amazon Web Services
+        </div>
+        <div class="vote-option" onclick="selectOption(this, 1)">
+          <span class="opt-letter">B</span> GCP — Google Cloud Platform
+        </div>
+        <div class="vote-option" onclick="selectOption(this, 2)">
+          <span class="opt-letter">C</span> Azure — Microsoft Azure
+        </div>
+        <div class="vote-option" onclick="selectOption(this, 3)">
+          <span class="opt-letter">D</span> All are great honestly
+        </div>
+      </div>
+      <div class="poll-actions">
+        <button class="btn btn-primary btn-full" onclick="castVote()" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          Cast my vote
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── RESULTS ─────────────── -->
+<div id="page-results" class="page">
+  <div class="results-page">
+    <p class="page-title">Live results</p>
+    <p class="page-sub">Updated automatically as votes come in.</p>
+    <div class="results-card">
+      <div class="results-header">
+        <div>
+          <div style="font-size:12px;font-family:var(--mono);color:var(--accent-mid);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Active poll</div>
+          <h2 id="results-question">Which cloud provider has the best free tier for students?</h2>
+        </div>
+        <div class="live-badge"><span class="dot"></span> LIVE</div>
+      </div>
+      <div class="results-body" id="results-body"></div>
+      <div class="results-footer">
+        <span id="results-total-label">Total votes</span>
+        <span class="total-votes" id="results-total">0</span>
+      </div>
+    </div>
+    <div style="margin-top:12px;text-align:center;">
+      <button class="btn-sm" onclick="simulateVote()">+ Simulate incoming vote</button>
+      <span style="font-size:12px;color:var(--ink-faint);margin-left:10px;">Click to see bars animate live</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── DASHBOARD ─────────────── -->
+<div id="page-dashboard" class="page">
+  <div class="dash-page">
+    <div class="dash-header">
+      <div>
+        <p class="page-title">Dashboard</p>
+        <p class="page-sub" style="margin-bottom:0;">All your polls, at a glance.</p>
+      </div>
+      <button class="btn btn-primary" onclick="goTo('create')">+ New poll</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat-tile">
+        <div class="lbl">Total polls</div>
+        <div class="val" id="stat-polls">3</div>
+      </div>
+      <div class="stat-tile">
+        <div class="lbl">Total votes</div>
+        <div class="val" id="stat-votes">127</div>
+      </div>
+      <div class="stat-tile">
+        <div class="lbl">Active now</div>
+        <div class="val" style="color:var(--green);" id="stat-active">2</div>
+      </div>
+      <div class="stat-tile">
+        <div class="lbl">Avg. votes / poll</div>
+        <div class="val" id="stat-avg">42</div>
+      </div>
+    </div>
+    <div class="polls-grid" id="dashboard-polls"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const letters = ['A','B','C','D'];
+let optionCount = 2;
+let selectedOption = -1;
+
+let polls = [
+  {
+    id: 'p1',
+    question: 'Which cloud provider has the best free tier for students?',
+    options: ['AWS — Amazon Web Services','GCP — Google Cloud Platform','Azure — Microsoft Azure','All are great honestly'],
+    votes: [24, 9, 6, 3],
+    live: true,
+    created: '2 hours ago'
+  },
+  {
+    id: 'p2',
+    question: 'What is your favourite AWS service?',
+    options: ['EC2', 'Lambda', 'S3', 'CloudFront'],
+    votes: [18, 31, 22, 14],
+    live: true,
+    created: '1 day ago'
+  },
+  {
+    id: 'p3',
+    question: 'Should we add dark mode to this app?',
+    options: ['Yes, absolutely', 'No, keep it light'],
+    votes: [44, 6],
+    live: false,
+    created: '3 days ago'
+  }
+];
+
+let activePollId = 'p1';
+
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  if (page === 'results') renderResults();
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'vote') renderVote();
+  window.scrollTo(0, 0);
+}
+
+function addOption() {
+  if (optionCount >= 4) { showToast('Maximum 4 options allowed'); return; }
+  const list = document.getElementById('options-list');
+  const row = document.createElement('div');
+  row.className = 'option-row';
+  row.innerHTML = `<span class="option-letter">${letters[optionCount]}</span><input type="text" placeholder="Option ${letters[optionCount]}" />`;
+  list.appendChild(row);
+  optionCount++;
+}
+
+function createPoll() {
+  const q = document.getElementById('poll-q').value.trim();
+  const inputs = document.querySelectorAll('#options-list input');
+  const opts = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+  if (!q) { showToast('Please enter a question'); return; }
+  if (opts.length < 2) { showToast('Add at least 2 options'); return; }
+
+  const newPoll = {
+    id: 'p' + Date.now(),
+    question: q,
+    options: opts,
+    votes: opts.map(() => 0),
+    live: true,
+    created: 'Just now'
+  };
+  polls.unshift(newPoll);
+  activePollId = newPoll.id;
+
+  document.getElementById('share-url-text').textContent = `https://d1abc123.cloudfront.net/vote?id=${newPoll.id}`;
+  document.getElementById('create-form-view').style.display = 'none';
+  document.getElementById('create-success-view').style.display = 'block';
+
+  updateStats();
+}
+
+function copyShareUrl() {
+  const url = document.getElementById('share-url-text').textContent;
+  navigator.clipboard.writeText(url).catch(() => {});
+  showToast('Link copied to clipboard!');
+}
+
+function renderVote() {
+  const poll = polls.find(p => p.id === activePollId) || polls[0];
+  document.getElementById('vote-question').textContent = poll.question;
+  const total = poll.votes.reduce((a,b)=>a+b,0);
+  document.getElementById('vote-meta').textContent = `${total} vote${total !== 1 ? 's' : ''} so far · anyone can vote`;
+  const container = document.getElementById('vote-options');
+  container.innerHTML = poll.options.map((opt, i) => `
+    <div class="vote-option" onclick="selectOption(this, ${i})">
+      <span class="opt-letter">${letters[i]}</span> ${opt}
+    </div>`).join('');
+  selectedOption = -1;
+}
+
+function selectOption(el, idx) {
+  document.querySelectorAll('.vote-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedOption = idx;
+}
+
+function castVote() {
+  if (selectedOption === -1) { showToast('Please select an option first'); return; }
+  const poll = polls.find(p => p.id === activePollId) || polls[0];
+  poll.votes[selectedOption]++;
+  showToast('Vote cast! 🎉 See the live results.');
+  setTimeout(() => goTo('results'), 900);
+}
+
+function renderResults() {
+  const poll = polls.find(p => p.id === activePollId) || polls[0];
+  document.getElementById('results-question').textContent = poll.question;
+  const total = poll.votes.reduce((a,b)=>a+b,0);
+  document.getElementById('results-total').textContent = total;
+  const max = Math.max(...poll.votes);
+  const body = document.getElementById('results-body');
+  body.innerHTML = poll.options.map((opt, i) => {
+    const pct = total > 0 ? Math.round((poll.votes[i] / total) * 100) : 0;
+    const isWinner = poll.votes[i] === max && max > 0;
+    return `
+      <div class="result-item">
+        <div class="result-label">
+          <span>${opt}</span>
+          <span class="result-pct">${pct}%</span>
+        </div>
+        <div class="result-bar-bg">
+          <div class="result-bar ${isWinner ? 'winner' : ''}" style="width:0%" data-pct="${pct}"></div>
+        </div>
+        <div class="result-votes">${poll.votes[i]} vote${poll.votes[i] !== 1 ? 's' : ''}</div>
+      </div>`;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.result-bar').forEach(bar => {
+      bar.style.width = bar.dataset.pct + '%';
+    });
+  }, 80);
+}
+
+function simulateVote() {
+  const poll = polls.find(p => p.id === activePollId) || polls[0];
+  const idx = Math.floor(Math.random() * poll.options.length);
+  poll.votes[idx]++;
+  updateStats();
+  renderResults();
+  showToast(`New vote for "${poll.options[idx].split('—')[0].trim()}"!`);
+}
+
+function renderDashboard() {
+  const container = document.getElementById('dashboard-polls');
+  container.innerHTML = polls.map(p => {
+    const total = p.votes.reduce((a,b)=>a+b,0);
+    return `
+      <div class="poll-row">
+        <div class="poll-row-left">
+          <div class="poll-row-q">${p.question}</div>
+          <div class="poll-row-meta">${total} votes · created ${p.created} &nbsp; <span class="badge ${p.live ? 'badge-live' : 'badge-closed'}">${p.live ? 'live' : 'closed'}</span></div>
+        </div>
+        <div class="poll-row-actions">
+          <button class="btn-sm" onclick="viewPollResults('${p.id}')">Results</button>
+          <button class="btn-sm accent" onclick="viewPollVote('${p.id}')">Vote →</button>
+        </div>
+      </div>`;
+  }).join('');
+  updateStats();
+}
+
+function viewPollResults(id) {
+  activePollId = id;
+  goTo('results');
+}
+function viewPollVote(id) {
+  activePollId = id;
+  goTo('vote');
+}
+
+function updateStats() {
+  const totalVotes = polls.reduce((s,p) => s + p.votes.reduce((a,b)=>a+b,0), 0);
+  const active = polls.filter(p => p.live).length;
+  document.getElementById('stat-polls').textContent = polls.length;
+  document.getElementById('stat-votes').textContent = totalVotes;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-avg').textContent = polls.length > 0 ? Math.round(totalVotes / polls.length) : 0;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+updateStats();
+</script>
+</body>
+</html>
