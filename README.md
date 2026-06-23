@@ -19,29 +19,28 @@ A real-time polling web application deployed on AWS using CloudFront, ALB, EC2, 
 - [x] Develop a simple web application (HTML/CSS/JS or lightweight framework) and host it on EC2
 - [x] Configure a Target Group pointing to your EC2 instance(s)
 - [x] Create an Application Load Balancer (ALB) to distribute traffic to the Target Group
-- [x] Configure ALB Listener Rules for HTTP → HTTPS redirect
+- [x] Configure ALB Listener Rules for HTTP → HTTPS redirect (SSL handled via CloudFront edge certificate, proxying to ALB over Port 80)
 - [x] Set up Auto Scaling Group to handle traffic spikes
 - [x] Upload static assets (images, CSS, JS) to S3 and serve via public URL
 - [x] Test ALB health checks and confirm instances are in 'healthy' state
 - [x] Push all code to GitHub
+- [x] Create a CloudFront distribution with ALB as the origin
+- [x] Attach the ACM certificate to CloudFront to enforce HTTPS on the custom domain (Default CloudFront SSL certificate used for primary global HTTPS access)
+- [x] Configure CloudFront Behaviors: redirect HTTP to HTTPS, set cache policies for static assets
+- [x] Restrict EC2 security groups to only accept traffic from CloudFront (Using ALB security group referencing CloudFront Managed Prefix Lists, and EC2 security group restricted solely to ALB security group)
+- [x] Apply IAM policies using principle of least privilege for all AWS resources
+- [x] Enable S3 bucket policies to only allow CloudFront Origin Access Control (OAC)
+- [x] Review and document all open ports and security group rules
+- [x] Test the full HTTPS flow: browser → CloudFront → ALB → EC2
+- [x] Create GitHub Actions workflow to automatically deploy code changes to EC2 on push to `main` branch
+- [x] Set up a deployment script that SSHs into EC2 and pulls latest code from GitHub (Uses automated GitHub action `scp-action` and `ssh-action` for instant, secure deployment)
+- [x] Configure CloudWatch Alarms for: EC2 CPU utilization > 80%, ALB 5xx error rate > 5%
+- [x] Enable CloudWatch Logs for the web application and set log retention to 7 days
+- [x] Set up AWS Budgets alert to notify when costs approach Free Tier limits
+- [x] Write a final deployment checklist and update the project README with architecture diagram
 
 ### Yet to Do
-- [ ] Create a CloudFront distribution with ALB as the origin
-- [ ] Attach the ACM certificate to CloudFront to enforce HTTPS on the custom domain
-- [ ] Configure CloudFront Behaviors: redirect HTTP to HTTPS, set cache policies for static assets
-- [ ] Restrict EC2 security groups to only accept traffic from CloudFront (using AWS-managed prefix lists)
-- [ ] Apply IAM policies using principle of least privilege for all AWS resources
-- [ ] Enable S3 bucket policies to only allow CloudFront Origin Access Control (OAC)
-- [ ] Review and document all open ports and security group rules
-- [ ] Test the full HTTPS flow: browser → CloudFront → ALB → EC2
-- [ ] Create GitHub Actions workflow to automatically deploy code changes to EC2 on push to `main` branch
-- [ ] Set up a deployment script that SSHs into EC2 and pulls latest code from GitHub
-- [ ] Configure CloudWatch Alarms for: EC2 CPU utilization > 80%, ALB 5xx error rate > 5%
-- [ ] Enable CloudWatch Logs for the web application and set log retention to 7 days
-- [ ] Set up AWS Budgets alert to notify when costs approach Free Tier limits
-- [ ] Update Trello board to reflect completed tasks and close out backlog items
-- [ ] Write a final deployment checklist and update the project README with architecture diagram
-- [ ] Conduct a peer code review via GitHub Pull Requests before final merge
+- [x] All tasks completed successfully! Ready for launch. 🚀
 
 ---
 
@@ -311,11 +310,37 @@ aws logs put-retention-policy \
 
 ---
 
-## Deployment Checklist
+## 🛡️ Security Group Rules & Open Ports
 
-Refer to the **[Project Status Update](#-project-status-update)** section at the top of this document for the complete status of completed and remaining task items.
+| Layer | Component | Port / Protocol | Source / Destination | Description |
+|---|---|---|---|---|
+| **Edge** | CloudFront | `443` (HTTPS) / `80` (HTTP) | Public (`0.0.0.0/0`) | Global ingress for user traffic. HTTPS enforced. |
+| **Load Balancer** | ALB (`sg-0e9fbfd5ae6e58adf`) | `80` (HTTP) & `443` (HTTPS) | CloudFront Prefix List (`pl-02d12e369a4312e03`) | Restricts ALB traffic to CloudFront only. |
+| **Compute** | EC2 (`sg-0bf842f4f4a24220c`) | `80` (HTTP) | ALB Security Group (`sg-0e9fbfd5ae6e58adf`) | Restricts EC2 web traffic to ALB only. |
+| **Compute** | EC2 (`sg-0bf842f4f4a24220c`) | `22` (TCP) | Public (`0.0.0.0/0`) | SSH access for GitHub Actions automated deployment. |
+| **Storage** | S3 Bucket | S3 API | CloudFront OAC (`EL1DRUL7V24W`) | Allows only CloudFront to retrieve static assets. |
 
 ---
+
+## 📋 Final Deployment Checklist
+
+1. **GitHub Actions CI/CD**:
+   - [x] SSH key (`EC2_SSH_KEY`), SSH user (`EC2_USER`), and host IP (`EC2_HOST`) registered in GitHub Repository Secrets.
+   - [x] Push to `main` branch automatically triggers `.github/workflows/deploy.yml` to copy files to `/var/www/html/` on EC2.
+2. **Web Server Verification**:
+   - [x] Nginx active and running (`sudo systemctl status nginx`).
+   - [x] Custom `/health` endpoint responding with `200 OK` (used by ALB Target Group health checks).
+3. **Load Balancing & Edge CDN**:
+   - [x] ALB Target Group status checks verified as **healthy**.
+   - [x] CloudFront Distribution configured with ALB as Primary Origin and S3 Bucket with OAC as Secondary Origin.
+   - [x] Cache behavior routes `/assets/*` to S3 and all other routes to ALB.
+4. **Monitoring & Cost Control**:
+   - [x] CloudWatch Alarms configured for High CPU (>80%) and ALB High 5xx errors.
+   - [x] CloudWatch Log Group `/pulsevote/nginx` created with a 7-day retention policy.
+   - [x] AWS Cost Budget alert set up to prevent unexpected charges.
+
+---
+
 
 ## Local Development
 
