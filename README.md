@@ -38,10 +38,6 @@ A real-time polling web application deployed on AWS using CloudFront, ALB, EC2, 
 - [x] Enable CloudWatch Logs for the web application and set log retention to 7 days
 - [x] Set up AWS Budgets alert to notify when costs approach Free Tier limits
 - [x] Write a final deployment checklist and update the project README with architecture diagram
-
-### Yet to Do
-- [x] All tasks completed successfully! Ready for launch. 🚀
-
 ---
 
 
